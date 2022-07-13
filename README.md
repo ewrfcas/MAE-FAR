@@ -1,5 +1,5 @@
 # MAE-FAR
-Codes of Learning Prior Feature and Attention Enhanced Image Inpainting
+Codes of Learning Prior Feature and Attention Enhanced Image Inpainting (ECCV2022)
 
 ## Updates
 - [x] Codes about MAE pre-training/inference
@@ -25,7 +25,7 @@ Will come soon!
 ```
 python -m torch.distributed.launch --nproc_per_node=2 --use_env mae_pretrain.py \
     --data_path ${IMAGE_FILES_TXT} \
-    --mask_path [${IRR_MASK_TXT}, ${COCO_MASK_TXT}] \
+    --mask_path ${IRR_MASK_TXT} ${COCO_MASK_TXT} \
     --batch_size 256 \
     --model mae_vit_base_patch16 \
     --mask_ratio 0.75 \
@@ -37,14 +37,14 @@ python -m torch.distributed.launch --nproc_per_node=2 --use_env mae_pretrain.py 
     --log_dir ./ckpts/mae_wo_cls_wo_pixnorm
 ```
 
-```mask_path``` can also be set as one file with ```--mask_path [${YOUR_MASK_TXT}]```.
+```mask_path``` can also be set as one file with ```--mask_path ${YOUR_MASK_TXT}```.
 
 You can also set ```--finetune``` and ```--random_mask``` for different MAE pre-training settings (not recommended in inpainting). 
 Details are discussed in the paper.
 
 ### Simple Inference
 
-See ```MAE/simple_test.ipynb```.
+See ```simple_test.ipynb```.
 
 ## FAR
 
