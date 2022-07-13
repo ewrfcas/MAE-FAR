@@ -4,7 +4,7 @@ Codes of Learning Prior Feature and Attention Enhanced Image Inpainting (ECCV202
 ## Updates
 - [x] Codes about MAE pre-training/inference
 - [ ] Pre-trained MAE weights
-- [ ] Codes about FAR
+- [ ] Codes about ACR
 
 ## Preparation
 
