@@ -3,13 +3,18 @@ Codes of Learning Prior Feature and Attention Enhanced Image Inpainting (ECCV202
 
 ## Updates
 - [x] Codes about MAE pre-training/inference
+- [x] Codes about ACR
 - [ ] Pre-trained MAE weights
-- [ ] Codes about ACR
 
 ## Preparation
 
 You can download irregular/coco masks from [here](https://drive.google.com/drive/folders/1eU6VaTWGdgCXXWueCXilt6oxHdONgUgf?usp=sharing).
 Of course, you can use your own masks with a txt index as [link](https://github.com/DQiaole/ZITS_inpainting/tree/main/data_list).
+
+Then download models for _perceptual loss_ from [LaMa](https://github.com/saic-mdal/lama):
+
+    mkdir -p ade20k/ade20k-resnet50dilated-ppm_deepsup/
+    wget -P ade20k/ade20k-resnet50dilated-ppm_deepsup/ http://sceneparsing.csail.mit.edu/model/pytorch/ade20k-resnet50dilated-ppm_deepsup/encoder_epoch_20.pth
 
 ## MAE for Inpainting
 
@@ -46,9 +51,27 @@ Details are discussed in the paper.
 
 See ```simple_test.ipynb```.
 
-## FAR
+## ACR
 
-Will come soon!
+Ensure you have downloaded pre-trained resnet50dilated from [LaMa](https://github.com/saic-mdal/lama).
+
+### Training
+
+```
+python train.py --config configs/config_FAR_places2.yml \
+                --exp_name ${EXP_NAME} \
+                --resume_mae ${MAE_PATH}
+```
+
+### Finetuning for 512x512~256x256
+
+
+```
+python finetune.py --config configs/config_FAR_places2_finetune_512.yml \
+                   --exp_name ${EXP_NAME} \
+                   --pl_resume ${PL_MODEL_PATH}
+```
+
 
 Our codes are based on [LaMa](https://github.com/saic-mdal/lama) and [MAE](https://github.com/facebookresearch/mae).
 

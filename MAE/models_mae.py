@@ -26,7 +26,7 @@ class MaskedAutoencoderViT(nn.Module):
     def __init__(self, img_size=256, patch_size=16, in_chans=3,
                  embed_dim=1024, depth=24, num_heads=16, decoder_embed_dim=512,
                  decoder_depth=8, decoder_num_heads=16, mlp_ratio=4., norm_layer=nn.LayerNorm,
-                 norm_pix_loss=False, init=True, random_mask=False):
+                 norm_pix_loss=False, init=True, random_mask=False, mask_decoder=False):
         super().__init__()
 
         # --------------------------------------------------------------------------
@@ -53,7 +53,7 @@ class MaskedAutoencoderViT(nn.Module):
                                               requires_grad=False)  # fixed sin-cos embedding
 
         self.decoder_blocks = nn.ModuleList([
-            Block(decoder_embed_dim, decoder_num_heads, mlp_ratio, qkv_bias=True, qk_scale=None, norm_layer=norm_layer)
+            Block(decoder_embed_dim, decoder_num_heads, mlp_ratio, qkv_bias=True, qk_scale=None, norm_layer=norm_layer, mask_decoder=mask_decoder)
             for i in range(decoder_depth)])
 
         self.decoder_norm = norm_layer(decoder_embed_dim)
@@ -62,6 +62,7 @@ class MaskedAutoencoderViT(nn.Module):
 
         self.norm_pix_loss = norm_pix_loss
         self.random_mask = random_mask
+        self.mask_decoder = mask_decoder
 
         if init:
             self.initialize_weights()
@@ -245,7 +246,9 @@ class MaskedAutoencoderViT(nn.Module):
         # masking: length -> length * mask_ratio
         # x, mask, ids_restore = self.random_masking(x, mask_ratio)
         mask = F.interpolate(mask, size=[s, s], mode='area')
+        mask_small = mask.clone()
         mask[mask > 0] = 1  # [N,1,S,S]
+        mask_small[mask_small < 1] = 0
         mask = mask.reshape(N, L).unsqueeze(1).unsqueeze(1)  # [N,1,1,L]
 
         # apply Transformer blocks
@@ -253,7 +256,8 @@ class MaskedAutoencoderViT(nn.Module):
             x, _ = blk(x, mask)
         x = self.norm(x)  # N,L,D
         mask = mask.squeeze(1).squeeze(1)  # N, L
-        return x, mask
+        mask_small = mask_small.reshape(N, L).unsqueeze(1).unsqueeze(1) # [N,1,1,L]
+        return x, mask, mask_small
 
     def forward_decoder_with_mask(self, x, mask):
         x = self.decoder_embed(x)  # N,L,D
@@ -275,7 +279,7 @@ class MaskedAutoencoderViT(nn.Module):
 
         return x
 
-    def forward_decoder_return_feature(self, x, mask):
+    def forward_decoder_return_feature(self, x, mask, mask_small):
         # embed tokens
         x = self.decoder_embed(x)  # N,L,D
         N, L, D = x.shape  # batch, length, dim
@@ -288,7 +292,10 @@ class MaskedAutoencoderViT(nn.Module):
         # apply Transformer blocks
         scores = []
         for blk in self.decoder_blocks:
-            x, score = blk(x)
+            if self.mask_decoder:
+                x, score = blk(x, mask_small)
+            else:
+                x, score = blk(x)
             scores.append(score.unsqueeze(1))
         scores = torch.mean(torch.cat(scores, dim=1), dim=1)  # [B,256,256]
         x = self.decoder_norm(x)
@@ -325,8 +332,8 @@ class MaskedAutoencoderViT(nn.Module):
         """
         return pred(feature), scores(attention). Used during finetuning.
         """
-        latent, new_mask = self.forward_encoder_with_mask(imgs, mask)
-        pred, scores = self.forward_decoder_return_feature(latent, new_mask)  # [N, L, D]
+        latent, new_mask, mask_small = self.forward_encoder_with_mask(imgs, mask)
+        pred, scores = self.forward_decoder_return_feature(latent, new_mask, mask_small)  # [N, L, D]
         N, L, D = pred.shape  # batch, length, dim
         s = int(np.sqrt(L))
         pred = pred.reshape(N, s, s, D).permute(0, 3, 1, 2)
@@ -336,7 +343,7 @@ class MaskedAutoencoderViT(nn.Module):
         """
         return Image, new_mask. Used during testing.
         """
-        latent, new_mask = self.forward_encoder_with_mask(imgs, mask)
+        latent, new_mask, _ = self.forward_encoder_with_mask(imgs, mask)
         image = self.forward_decoder_with_mask(latent, new_mask)  # [N, L, D]
         image = self.unpatchify(image)
         return image, new_mask
@@ -349,11 +356,11 @@ class MaskedAutoencoderViTFinetune(MaskedAutoencoderViT):
     def __init__(self, img_size=256, patch_size=16, in_chans=3,
                  embed_dim=1024, depth=24, num_heads=16,
                  decoder_embed_dim=512, decoder_depth=8, decoder_num_heads=16,
-                 mlp_ratio=4., norm_layer=nn.LayerNorm, norm_pix_loss=False, random_mask=False):
+                 mlp_ratio=4., norm_layer=nn.LayerNorm, norm_pix_loss=False, random_mask=False, mask_decoder=False):
         super().__init__(img_size=img_size, patch_size=patch_size, in_chans=in_chans, embed_dim=embed_dim, depth=depth,
                          num_heads=num_heads, decoder_embed_dim=decoder_embed_dim, decoder_depth=decoder_depth,
                          decoder_num_heads=decoder_num_heads, mlp_ratio=mlp_ratio, norm_layer=norm_layer, norm_pix_loss=norm_pix_loss,
-                         random_mask=random_mask, init=False)
+                         random_mask=random_mask, mask_decoder=mask_decoder, init=False)
         # --------------------------------------------------------------------------
         # MAE decoder specifics
         self.decoder_patch_embed = PatchEmbed(img_size, patch_size, in_chans + 1, decoder_embed_dim)
@@ -521,7 +528,7 @@ class MaskedAutoencoderViTFinetune(MaskedAutoencoderViT):
 
         return x
 
-    def forward_decoder_return_feature(self, x, mask, imgs, irr_mask):
+    def forward_decoder_return_feature(self, x, mask, imgs, irr_mask, mask_small):
         # embed tokens
         x = self.decoder_embed(x)  # N,L,D
 
@@ -548,7 +555,10 @@ class MaskedAutoencoderViTFinetune(MaskedAutoencoderViT):
         # apply Transformer blocks
         scores = []
         for blk in self.decoder_blocks:
-            x, score = blk(x)
+            if self.mask_decoder:
+                x, score = blk(x, mask_small)
+            else:
+                x, score = blk(x)
             scores.append(score.unsqueeze(1))
         scores = torch.mean(torch.cat(scores, dim=1), dim=1)  # [B,256,256]
         x = self.decoder_norm(x)
@@ -589,8 +599,8 @@ class MaskedAutoencoderViTFinetune(MaskedAutoencoderViT):
         """
         return pred(feature), scores(attention). Used during finetuning.
         """
-        latent, new_mask = self.forward_encoder_with_mask(imgs, mask)
-        pred, scores = self.forward_decoder_return_feature(latent, new_mask, imgs, mask)  # [N, L, D]
+        latent, new_mask, mask_small = self.forward_encoder_with_mask(imgs, mask)
+        pred, scores = self.forward_decoder_return_feature(latent, new_mask, imgs, mask, mask_small)  # [N, L, D]
         N, L, D = pred.shape  # batch, length, dim
         s = int(np.sqrt(L))
         pred = pred.reshape(N, s, s, D).permute(0, 3, 1, 2)
@@ -600,7 +610,7 @@ class MaskedAutoencoderViTFinetune(MaskedAutoencoderViT):
         """
         return Image, new_mask. Used during testing.
         """
-        latent, new_mask = self.forward_encoder_with_mask(imgs, mask)
+        latent, new_mask, _ = self.forward_encoder_with_mask(imgs, mask)
         image = self.forward_decoder_with_mask(latent, new_mask, imgs, mask)  # [N, L, D]
         image = self.unpatchify(image)
         return image, new_mask

@@ -18,7 +18,6 @@ def to_int(x):
 
 
 class ImgMaskDataset(Dataset):
-
     def __init__(self, pt_dataset, mask_path=None, test_mask_path=None, is_train=False, mask_rates=None, image_size=256):
 
         self.is_train = is_train
