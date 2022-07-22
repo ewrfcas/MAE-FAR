@@ -10,9 +10,8 @@ import unittest
 
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
-
 from sync_batchnorm.unittest import TorchTestCase
+from torch.autograd import Variable
 
 
 def handy_var(a, unbias=True):

@@ -1,16 +1,18 @@
-from tqdm import tqdm
 import os
-import torch
-import numpy as np
-import cv2
-from scipy import linalg
 from glob import glob
+
+import cv2
+import lpips
+import numpy as np
+import torch
+from scipy import linalg
+from skimage.color import rgb2gray
+from skimage.measure import compare_ssim
 from torch.autograd import Variable
 from torch.nn.functional import adaptive_avg_pool2d
-from skimage.measure import compare_ssim
-from skimage.color import rgb2gray
+from tqdm import tqdm
+
 from ACR.networks.inception import InceptionV3
-import lpips
 
 
 def get_activations(images, model, batch_size=64, dims=2048,

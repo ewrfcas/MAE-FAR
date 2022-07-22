@@ -1,12 +1,12 @@
 import logging
 import os
+import shutil
 from datetime import datetime
 from functools import reduce, partial
 from operator import getitem
 from pathlib import Path
 
 import yaml
-import shutil
 
 
 class ConfigParser:

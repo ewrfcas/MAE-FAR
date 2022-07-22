@@ -1,16 +1,17 @@
 import copy
-from torch.utils.data import DataLoader
-import cv2
 import os
-from ACR.utils import stitch_images, get_lr_milestone_decay_with_warmup
-from ACR.networks.pcp import ResNetPL
+
+import cv2
+import pytorch_lightning as ptl
+import torch.distributed as dist
+from torch.utils.data import DataLoader
+from torch.utils.data.distributed import DistributedSampler
+
+from ACR.base.dataset import DynamicFARDataset
 from ACR.inpainting_metric import get_inpainting_metrics
 from ACR.networks.losses import *
-import pytorch_lightning as ptl
-import glob
-from ACR.base.dataset import DynamicFARDataset
-import time
-from torch.utils.data.distributed import DistributedSampler
+from ACR.networks.pcp import ResNetPL
+from ACR.utils import stitch_images, get_lr_milestone_decay_with_warmup
 
 
 def add_prefix_to_keys(dct, prefix):
@@ -176,6 +177,7 @@ class PLTrainer(ptl.LightningModule):
         # load pre-trained opt params
         if self.g_opt_state is not None:
             g_optimizer.load_state_dict(self.g_opt_state)
+
         if self.d_opt_state is not None:
             d_optimizer.load_state_dict(self.d_opt_state)
 
@@ -184,6 +186,15 @@ class PLTrainer(ptl.LightningModule):
         d_sche = get_lr_milestone_decay_with_warmup(d_optimizer, num_warmup_steps=opt_args['warmup_steps'],
                                                     milestone_steps=opt_args['decay_steps'], gamma=opt_args['decay_rate'])
         return [g_optimizer, d_optimizer], [g_sche, d_sche]
+
+    def on_train_start(self) -> None:
+        if self.get_ddp_rank() is not None and (self.g_opt_state is not None or self.d_opt_state is not None):
+            for opt in self.trainer.optimizers:
+                if 'state' in opt.state_dict():
+                    for k in opt.state_dict()['state']:
+                        for k_ in opt.state_dict()['state'][k]:
+                            if isinstance(opt.state_dict()['state'][k][k_], torch.Tensor):
+                                opt.state_dict()['state'][k][k_] = opt.state_dict()['state'][k][k_].to(device=self.get_ddp_rank())
 
     def on_train_epoch_start(self):
         # For each epoch, we need to reset dynamic resolutions
@@ -259,15 +270,7 @@ class PLTrainer(ptl.LightningModule):
         self.acr.train()
 
     def validation_epoch_end(self, outputs):
-        if self.trainer.is_global_zero and self.num_gpus > 1:
-            time.sleep(1)
-            while True:  # 等待其他进程完成保存
-                input_paths = sorted(glob.glob(self.eval_path + '/*'), key=lambda x: x.split('/')[-1])
-                output_paths = sorted(glob.glob(self.test_path + '/*'), key=lambda x: x.split('/')[-1])
-                self.print('Waiting all validated image saving over...')
-                time.sleep(0.5)
-                if len(input_paths) == len(output_paths):
-                    break
+        dist.barrier()
         if self.trainer.is_global_zero:
             self.metric = get_inpainting_metrics(self.eval_path, self.test_path)
 
@@ -276,12 +279,11 @@ class PLTrainer(ptl.LightningModule):
                 if m in ['PSNR', 'SSIM', 'FID', 'LPIPS']:
                     if m in self.metric:
                         self.print(m, self.metric[m])
-                self.metric[m] *= self.num_gpus  # 其他进程结果均是0，这里*ngpu来平衡metric
+                self.metric[m] *= self.num_gpus  # results of other processes are all zero, so *ngpu to balance the metric
 
         else:
             self.metric = {'PSNR': 0, 'SSIM': 0, 'LPIPS': 0, 'FID': 0}
 
-        # 非rank0进程等待rank0验证完后同步结果，否则存储后训练会死锁（无语）
         self.log('val/PSNR', self.metric['PSNR'], sync_dist=True)
         self.log('val/SSIM', self.metric['SSIM'], sync_dist=True)
         self.log('val/LPIPS', self.metric['LPIPS'], sync_dist=True)
@@ -303,14 +305,17 @@ class PLTrainer(ptl.LightningModule):
                 combined_gen_ema_img, _ = self.run_G_ema(items)
                 combined_gen_ema_img = torch.clamp(combined_gen_ema_img, 0, 1)
             else:
-                combined_gen_ema_img = combined_gen_img.clone()
+                combined_gen_ema_img = torch.zeros_like(combined_gen_img)
 
-            image_per_row = 2
+            if self.args['batch_size'] // self.num_gpus > 1:
+                image_per_row = 2
+            else:
+                image_per_row = 1
             images = stitch_images(
                 self.postprocess((items['image']).cpu()),
                 self.postprocess((items['image'] * (1 - items['mask'])).cpu()),
-                self.postprocess((combined_gen_img).cpu()),
-                self.postprocess((combined_gen_ema_img).cpu()),
+                self.postprocess(combined_gen_img.cpu()),
+                self.postprocess(combined_gen_ema_img.cpu()),
                 img_per_row=image_per_row
             )
 

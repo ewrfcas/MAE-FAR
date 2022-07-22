@@ -1,12 +1,13 @@
-import os
 import glob
-import torch
+import os
 import random
-import numpy as np
-import torchvision.transforms.functional as F
-from torch.utils.data import DataLoader
+
 import cv2
+import numpy as np
+import torch
+import torchvision.transforms.functional as F
 from PIL import Image
+from torch.utils.data import DataLoader
 from torchvision import transforms
 
 

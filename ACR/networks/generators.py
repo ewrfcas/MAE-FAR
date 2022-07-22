@@ -1,6 +1,7 @@
 import torch.nn.functional as F
-from ACR.networks.ffc import FFCResnetBlock
+
 from ACR.networks.attention import GroupConvAttention
+from ACR.networks.ffc import FFCResnetBlock
 from ACR.networks.layers import *
 
 
@@ -46,7 +47,6 @@ class FFCGenerator(nn.Module):
         self.act_last = nn.Sigmoid()
 
     def forward(self, x, prior_feats, rel_pos_emb=None, direct_emb=None, scores=None, alpha_att1=None, alpha_att2=None):
-        # 351444.6875
         x = self.pad1(x)
         x = self.conv1(x)
         if self.config['use_mpe']:

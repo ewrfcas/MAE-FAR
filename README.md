@@ -27,7 +27,7 @@ Will come soon!
 [comment]: <> (MAE pre-trained on FFHQ. [&#40;download&#41;]&#40;&#41;)
 
 ### Pre-training MAE
-```
+```bash
 python -m torch.distributed.launch --nproc_per_node=2 --use_env mae_pretrain.py \
     --data_path ${IMAGE_FILES_TXT} \
     --mask_path ${IRR_MASK_TXT} ${COCO_MASK_TXT} \
@@ -57,7 +57,7 @@ Ensure you have downloaded pre-trained resnet50dilated from [LaMa](https://githu
 
 ### Training
 
-```
+```bash
 python train.py --config configs/config_FAR_places2.yml \
                 --exp_name ${EXP_NAME} \
                 --resume_mae ${MAE_PATH}
@@ -66,7 +66,7 @@ python train.py --config configs/config_FAR_places2.yml \
 ### Finetuning for 512x512~256x256
 
 
-```
+```bash
 python finetune.py --config configs/config_FAR_places2_finetune_512.yml \
                    --exp_name ${EXP_NAME} \
                    --pl_resume ${PL_MODEL_PATH}

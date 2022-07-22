@@ -10,9 +10,10 @@ import numpy as np
 import torch
 import torchvision.utils as vutils
 import yaml
+from PIL import Image
 from omegaconf import OmegaConf
 from torch.optim.lr_scheduler import LambdaLR
-from PIL import Image
+
 
 # print arguments
 def print_args(args):

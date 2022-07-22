@@ -3,10 +3,12 @@ This MobileNetV2 implementation is modified from the following repository:
 https://github.com/tonylins/pytorch-mobilenet-v2
 """
 
-import torch.nn as nn
 import math
-from .utils import load_url
+
+import torch.nn as nn
+
 from .segm_lib.nn import SynchronizedBatchNorm2d
+from .utils import load_url
 
 BatchNorm2d = SynchronizedBatchNorm2d
 

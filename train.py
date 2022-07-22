@@ -1,14 +1,15 @@
 import argparse
-from ACR.base.parse_config import ConfigParser
-import torch.nn.parallel
-from MAE.util.misc import get_mae_model
-from ACR.networks.generators import ACRModel
-from ACR.networks.discriminators import NLayerDiscriminator
 
+import torch.nn.parallel
+from pytorch_lightning import Trainer, loggers
 # pytorch-lightning
 from pytorch_lightning.callbacks import ModelCheckpoint
-from pytorch_lightning import Trainer, loggers
+
+from ACR.base.parse_config import ConfigParser
+from ACR.networks.discriminators import NLayerDiscriminator
+from ACR.networks.generators import ACRModel
 from ACR.trainer import PLTrainer
+from MAE.util.misc import get_mae_model
 
 
 def main(args, config):

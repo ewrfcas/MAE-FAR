@@ -1,7 +1,8 @@
+import collections
+
+import numpy as np
 import torch
 from torch.autograd import Variable
-import numpy as np
-import collections
 
 __all__ = ['as_variable', 'as_numpy', 'mark_volatile']
 

@@ -1,11 +1,11 @@
 # -*- coding: utf8 -*-
 
+import collections
+
+import torch
 import torch.cuda as cuda
 import torch.nn as nn
-import torch
-import collections
 from torch.nn.parallel._functions import Gather
-
 
 __all__ = ['UserScatteredDataParallel', 'user_scattered_collate', 'async_copy_to']
 
