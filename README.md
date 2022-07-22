@@ -57,6 +57,8 @@ Ensure you have downloaded pre-trained resnet50dilated from [LaMa](https://githu
 
 ### Training
 
+If multiple gpus (>1) are used, codes will work in DDP automatically .
+
 ```bash
 python train.py --config configs/config_FAR_places2.yml \
                 --exp_name ${EXP_NAME} \
