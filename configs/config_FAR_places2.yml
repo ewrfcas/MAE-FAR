@@ -48,7 +48,7 @@ trainer:
   adversarial:
     weight: 10.0
     gp_coef: 0.001
-    mask_as_fake_target: false # false for single D logits
+    mask_as_fake_target: true # false for single D logits
     allow_scale_mask: true
     extra_mask_weight_for_gen: 0.0
     use_unmasked_for_gen: true
