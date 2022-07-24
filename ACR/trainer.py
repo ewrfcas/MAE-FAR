@@ -183,8 +183,10 @@ class PLTrainer(ptl.LightningModule):
 
         g_sche = get_lr_milestone_decay_with_warmup(g_optimizer, num_warmup_steps=opt_args['warmup_steps'],
                                                     milestone_steps=opt_args['decay_steps'], gamma=opt_args['decay_rate'])
+        g_sche = {'scheduler': g_sche, 'interval': 'step'}  # called after each training step
         d_sche = get_lr_milestone_decay_with_warmup(d_optimizer, num_warmup_steps=opt_args['warmup_steps'],
                                                     milestone_steps=opt_args['decay_steps'], gamma=opt_args['decay_rate'])
+        d_sche = {'scheduler': d_sche, 'interval': 'step'}  # called after each training step
         return [g_optimizer, d_optimizer], [g_sche, d_sche]
 
     def on_train_start(self) -> None:

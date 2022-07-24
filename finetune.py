@@ -10,6 +10,8 @@ from ACR.networks.discriminators import NLayerDiscriminator
 from ACR.networks.generators import ACRModel
 from ACR.trainer import PLTrainer
 from MAE.util.misc import get_mae_model
+import numpy as np
+import random
 
 
 def main(args, config):
@@ -91,8 +93,11 @@ if __name__ == '__main__':
     # custom cli options to modify configuration from default values given in json file.
     args = args.parse_args()
     config = ConfigParser.from_args(args, mkdir=True)
-    SEED = 123
+    SEED = 456
     torch.manual_seed(SEED)
+    torch.cuda.manual_seed_all(SEED)
+    np.random.seed(SEED)
+    random.seed(SEED)
 
     num_gpus = torch.cuda.device_count()
     args.num_gpus = num_gpus
