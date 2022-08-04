@@ -1,6 +1,8 @@
 # MAE-FAR
 Codes of Learning Prior Feature and Attention Enhanced Image Inpainting (ECCV2022)
 
+[Paper and Supplemental Material (arXiv)](http://arxiv.org/abs/2208.01837)
+
 ## Updates
 - [x] Codes about MAE pre-training/inference
 - [x] Codes about ACR
@@ -74,8 +76,20 @@ python finetune.py --config configs/config_FAR_places2_finetune_512.yml \
                    --pl_resume ${PL_MODEL_PATH}
 ```
 
+## Acknowledgments
 
 Our codes are based on [LaMa](https://github.com/saic-mdal/lama) and [MAE](https://github.com/facebookresearch/mae).
 
+## Cite
 
+If you found our program helpful, please consider citing:
+
+```
+@inproceedings{cao2022learning,
+      title={Learning Prior Feature and Attention Enhanced Image Inpainting}, 
+      author={Cao, Chenjie and Dong, Qiaole and Fu, Yanwei},
+      journal={{ECCV}},
+      year={2022}
+}
+```
 
