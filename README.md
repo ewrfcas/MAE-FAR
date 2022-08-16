@@ -1,7 +1,7 @@
 # MAE-FAR
 Codes of Learning Prior Feature and Attention Enhanced Image Inpainting (ECCV2022)
 
-[Paper and Supplemental Material (arXiv)](http://arxiv.org/abs/2208.01837)
+[[arXiv]](http://arxiv.org/abs/2208.01837) [[Project Page]](https://ewrfcas.github.io/MAE-FAR/)
 
 ## Updates
 - [x] Codes about MAE pre-training/inference
