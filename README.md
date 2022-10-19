@@ -1,14 +1,12 @@
 # MAE-FAR
 Codes of Learning Prior Feature and Attention Enhanced Image Inpainting (ECCV2022)
 
-[[arXiv]](http://arxiv.org/abs/2208.01837) [[Project Page]](https://ewrfcas.github.io/MAE-FAR/)
+[Paper and Supplemental Material (arXiv)](http://arxiv.org/abs/2208.01837)
 
 ## Updates
 - [x] Codes about MAE pre-training/inference
-- [ ] Codes about ACR
+- [x] Codes about ACR
 - [ ] Pre-trained MAE weights
-
-Complete codes and models will be released soon.
 
 ## Preparation
 
@@ -54,6 +52,33 @@ Details are discussed in the paper.
 ### Simple Inference
 
 See ```simple_test.ipynb```.
+
+## ACR
+
+Ensure you have downloaded pre-trained resnet50dilated from [LaMa](https://github.com/saic-mdal/lama).
+
+### Training
+
+If multiple gpus (>1) are used, codes will work in DDP automatically .
+
+```bash
+python train.py --config configs/config_FAR_places2.yml \
+                --exp_name ${EXP_NAME} \
+                --resume_mae ${MAE_PATH}
+```
+
+### Finetuning for 512x512~256x256
+
+
+```bash
+python finetune.py --config configs/config_FAR_places2_finetune_512.yml \
+                   --exp_name ${EXP_NAME} \
+                   --pl_resume ${PL_MODEL_PATH}
+```
+
+## Acknowledgments
+
+Our codes are based on [LaMa](https://github.com/saic-mdal/lama) and [MAE](https://github.com/facebookresearch/mae).
 
 ## Cite
 

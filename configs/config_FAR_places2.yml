@@ -1,0 +1,75 @@
+train_flist: 'data/places365_standard/train_list.txt'
+val_flist: 'data/places365_standard/test_sub_list.txt'
+test_path: 'data/places365_standard/val_256img_for_eval' # save your test images with 256x256 or 512x512 for FID validation
+
+train_mask_flist: [ 'mask/irregular_mask/irregular_mask_list.txt',
+                    'mask/coco_mask/coco_mask_list.txt' ]
+test_mask_flist: 'mask/test_mask' # save fixed test masks (the number should be the same as val_flist)
+
+batch_size: 32                 # input batch size for training
+sample_size: 12
+fp16: false
+mask_decoder: true
+
+# Dataset settings
+dataset:
+  pos_size: 32
+  mask_rate: [0.4, 0.8, 1.0]
+  default_size: 256
+  input_size: 256
+  eval_size: 256
+  round: 64
+
+# Generator settings
+g_args:
+  rel_pos_num: 128
+  use_attn: true
+  use_mpe: true
+
+# Discriminator settings
+d_args:
+  input_nc: 3
+
+# Trainer settings
+trainer:
+  total_step: 850000
+  sample_period: 2000
+  eval_period: 5000
+  save_period: 5000
+  logging_every: 50
+  D_reg_interval: 1
+  ema_beta: 0.998
+  sample_with_center_mask: false
+  # loss
+  l1:
+    use_l1: true
+    weight_missing: 0
+    weight_known: 10.0
+  adversarial:
+    weight: 10.0
+    gp_coef: 0.001
+    mask_as_fake_target: true # false for single D logits
+    allow_scale_mask: true
+    extra_mask_weight_for_gen: 0.0
+    use_unmasked_for_gen: true
+    use_unmasked_for_discr: true
+    mask_scale_mode: 'nearest'
+  resnet_pl:
+    weight: 30.0
+    weights_path: './' # path for pre-trained ade20k
+  feature_matching:
+    weight: 100.0
+
+# opt settings
+optimizer:
+  warmup_steps: 0
+  decay_steps: [600000, 700000, 800000]
+  decay_rate: 0.5
+  g_opt:
+    lr: 1.0e-3
+    beta1: 0.9
+    beta2: 0.999
+  d_opt:
+    lr: 1.0e-4
+    beta1: 0.9
+    beta2: 0.999
