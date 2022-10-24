@@ -6,7 +6,7 @@ Codes of Learning Prior Feature and Attention Enhanced Image Inpainting (ECCV202
 ## Updates
 - [x] Codes about MAE pre-training/inference
 - [x] Codes about ACR
-- [ ] Pre-trained MAE weights
+- [x] Pre-trained MAE weights
 
 ## Preparation
 
@@ -22,7 +22,9 @@ Then download models for _perceptual loss_ from [LaMa](https://github.com/saic-m
 
 ### Pre-trained MAE for Inpainting
 
-Will come soon!
+FFHQ: [link](https://drive.google.com/file/d/13D-NK17I1ZjgafQ5vKSM-O03Hwu9OqzH/view?usp=sharing)
+
+Places2: [link](https://drive.google.com/file/d/10hZrp14wiQwOYO_3nzHC2OdoXAJSwPb4/view?usp=sharing)
 
 [comment]: <> (MAE pre-trained on Places2 &#40;1.8M&#41; [&#40;download&#41;]&#40;&#41;.)
 
