@@ -8,6 +8,7 @@ import torch
 import torch.nn.parallel
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+import torch.backends.cudnn as cudnn
 
 from ACR.base.dataset import DynamicFARDataset
 from ACR.base.parse_config import ConfigParser
@@ -40,16 +41,29 @@ def main(gpu, args, config):
         print('G', sum(p.numel() for p in acr.G.parameters()))
         print('GCs', sum(p.numel() for p in acr.GCs.parameters()))
 
-    print("Loading checkpoint: {} ...".format(args.mae_ckpt))
-    checkpoint = torch.load(args.mae_ckpt, map_location='cpu')
-    mae.load_state_dict(checkpoint['model'])
-    if args.g_ckpt is None:
-        args.g_ckpt = 'G_last.pth'
-    resume_path = os.path.join(str(config.resume), args.g_ckpt)
-    print("Loading checkpoint: {} ...".format(resume_path))
-    checkpoint = torch.load(resume_path, map_location='cpu')
-    acr.G.load_state_dict(checkpoint['generator'])
-    acr.GCs.load_state_dict(checkpoint['gc_encoder'])
+    if args.load_pl:  # load ckpt from pytorch lightning
+        print("Loading checkpoint: {} ...".format(args.resume))
+        checkpoint = torch.load(args.resume, map_location='cpu')['state_dict']
+        mae_weights = {}
+        g_weights = {}
+        for k in checkpoint:
+            if k.startswith('mae.'):
+                mae_weights[k.replace('mae.', '')] = checkpoint[k]
+            if k.startswith('acr.'):
+                g_weights[k.replace('acr.', '')] = checkpoint[k]
+        mae.load_state_dict(mae_weights)
+        acr.load_state_dict(g_weights)
+    else:
+        print("Loading checkpoint: {} ...".format(args.mae_ckpt))
+        checkpoint = torch.load(args.mae_ckpt, map_location='cpu')
+        mae.load_state_dict(checkpoint['model'])
+        if args.g_ckpt is None:
+            args.g_ckpt = 'G_last.pth'
+        resume_path = os.path.join(str(config.resume), args.g_ckpt)
+        print("Loading checkpoint: {} ...".format(resume_path))
+        checkpoint = torch.load(resume_path, map_location='cpu')
+        acr.G.load_state_dict(checkpoint['generator'])
+        acr.GCs.load_state_dict(checkpoint['gc_encoder'])
 
     eval_path = args.output_path
     os.makedirs(eval_path, exist_ok=True)
@@ -86,18 +100,19 @@ if __name__ == '__main__':
     args.add_argument('--mae_ckpt', default=None, type=str)
     args.add_argument('--g_ckpt', default=None, type=str)
     args.add_argument('--output_path', type=str, default='./outputs')
+    args.add_argument('--load_pl', action='store_true')
     args.add_argument('--image_size', type=int, default=256, help='Test image size')
 
     # custom cli options to modify configuration from default values given in json file.
     args = args.parse_args()
-    config = ConfigParser.from_args(args)
+    config = ConfigParser.from_args(args, mkdir=False)
     SEED = 3407
     # initialize random seed
     torch.manual_seed(SEED)
     torch.cuda.manual_seed_all(SEED)
     np.random.seed(SEED)
     random.seed(SEED)
-    # cudnn.benchmark = True
+    cudnn.benchmark = True
 
     args.world_size = 1
 

@@ -7,6 +7,7 @@ Codes of Learning Prior Feature and Attention Enhanced Image Inpainting (ECCV202
 - [x] Codes about MAE pre-training/inference
 - [x] Codes about ACR
 - [x] Pre-trained MAE weights
+- [x] Release weights trained on Places2
 
 ## Preparation
 
@@ -76,6 +77,21 @@ python train.py --config configs/config_FAR_places2.yml \
 python finetune.py --config configs/config_FAR_places2_finetune_512.yml \
                    --exp_name ${EXP_NAME} \
                    --pl_resume ${PL_MODEL_PATH}
+```
+
+### Testing
+
+Download weights from [link](https://drive.google.com/file/d/1y48XPao7ImANGq1wu7C9ngquvGcXV284/view?usp=sharing)
+
+This model is re-trained by the new code. 
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python test.py \
+  --resume ${PL_MODEL_PATH} \
+  --config ${CONFIG_PATH} \
+  --output_path ${OUTPUT_PATH} \
+  --image_size ${TEST_IMG_SCALE} \
+  --load_pl
 ```
 
 ## Acknowledgments

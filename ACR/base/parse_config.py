@@ -51,7 +51,7 @@ class ConfigParser:
         import argparse
         if not isinstance(args, tuple) and not isinstance(args, argparse.Namespace):
             args = args.parse_args()
-        if args.resume is not None:
+        if args.resume is not None and args.config is None:
             resume = Path(args.resume)
             cfg_fname = resume / 'config.yml'
         else:
