@@ -76,7 +76,8 @@ python train.py --config configs/config_FAR_places2.yml \
 ```bash
 python finetune.py --config configs/config_FAR_places2_finetune_512.yml \
                    --exp_name ${EXP_NAME} \
-                   --pl_resume ${PL_MODEL_PATH}
+                   --pl_resume ${PL_MODEL_PATH} \
+                   --dynamic_size # if you need dynamic size training from 256 to 512
 ```
 
 ### Testing
