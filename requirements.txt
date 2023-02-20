@@ -4,3 +4,4 @@ Pillow==9.3.0
 timm==0.3.2
 torch==1.9.0+cu111
 torchvision==0.10.0+cu111
+pytorch_lightning==1.2.9
