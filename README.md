@@ -58,6 +58,8 @@ See ```simple_test.ipynb```.
 
 ## ACR
 
+**TIPS: Now we recommend to use features from layer6 of the MAE instead of layer8 to enjoy superior performance.**
+
 Ensure you have downloaded pre-trained resnet50dilated from [LaMa](https://github.com/saic-mdal/lama).
 
 ### Training
