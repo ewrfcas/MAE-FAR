@@ -97,6 +97,19 @@ CUDA_VISIBLE_DEVICES=0 python test.py \
   --load_pl
 ```
 
+Inference for a single case.
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python test_custom.py \
+  --resume ${PL_MODEL_PATH} \
+  --config ${CONFIG_PATH} \
+  --image_path ${IMAGE_PATH} \
+  --mask_path ${MASK_PATH} \
+  --output_path ${OUTPUT_PATH} \
+  --image_size ${TEST_IMG_SCALE} \
+  --load_pl
+```
+
 ## Acknowledgments
 
 Our codes are based on [LaMa](https://github.com/saic-mdal/lama) and [MAE](https://github.com/facebookresearch/mae).
