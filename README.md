@@ -97,7 +97,7 @@ CUDA_VISIBLE_DEVICES=0 python test.py \
   --load_pl
 ```
 
-Inference for a single case.
+Inference for a single case. ```MASK_PATH``` and ```IMAGE_PATH``` should contain equivalent images with the same names.
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 python test_custom.py \
