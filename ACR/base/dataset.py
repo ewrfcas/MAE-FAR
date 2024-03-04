@@ -118,7 +118,15 @@ class DynamicFARDataset(torch.utils.data.Dataset):
         # origin_h, origin_w = img.shape[:2]
         img = img[:, :, ::-1]
         # resize/crop if needed
-        img = self.resize(img, size, size)
+        if self.training:
+            img = self.resize(img, size, size)
+        else:
+            h, w, _ = img.shape
+            if h > w:
+                img = img[(h - w) // 2:(h - w) // 2 + w, :, :]
+            else:
+                img = img[:, (w - h) // 2:(w - h) // 2 + h, :]
+            img = np.asarray(Image.fromarray(img).resize((size, size), Image.LANCZOS))
         img_256 = self.resize(img, 256, 256)
 
         # load mask
